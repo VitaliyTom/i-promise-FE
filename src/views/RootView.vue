@@ -1,18 +1,28 @@
 <template>
   <div class="root">
-    <!--    <img alt="Vue logo" src="../assets/logo.png" />-->
-    <HelloWorld msg="sign in or sign up" />
+    <img alt="Vue logo" src="../assets/logo.svg" />
+    <welcome />
   </div>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
+import Vue from 'vue';
+import Welcome from '@/components/Welcome.vue';
 
 export default Vue.extend({
-  name: "RootView",
+  name: 'RootView',
   components: {
-    HelloWorld,
+    Welcome,
   },
 });
 </script>
+
+<style lang="scss">
+img {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  width: 45px;
+  height: 45px;
+}
+</style>
