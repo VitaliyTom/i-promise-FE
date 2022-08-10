@@ -1,8 +1,11 @@
 <template>
-  <div class="container">
-    <p class="title_login">Log in</p>
+  <v-container
+    class="d-flex flex-column justify-center align-center"
+    fill-height
+  >
+    <p class="text-lg-h2 deep-purple--text text--darken-1 mb-10">Log in</p>
     <log-in></log-in>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -16,11 +19,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.title_login {
-  font-size: 32px;
-  font-weight: bold;
-  color: #673ab7;
-}
-</style>

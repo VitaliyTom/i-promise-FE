@@ -1,12 +1,22 @@
 <template>
-  <div class="form wrapper">
-    <v-sheet color="white" elevation="5" rounded>
-      <v-form ref="form" v-model="valid" @submit.prevent="submit">
+  <v-container
+    class="d-flex flex-column justify-center align-center"
+    width="30%"
+  >
+    <v-card
+      color="white"
+      elevation="5"
+      rounded
+      width="100%"
+      min-width="320px"
+      max-width="500px"
+    >
+      <v-form class="pa-10" ref="form" v-model="valid" @submit.prevent="submit">
         <v-text-field
-          v-model="email"
           :counter="50"
           :rules="emailRules"
           :error-messages="errors.email"
+          v-model="email"
           prepend-icon="mdi-email"
           label="E-mail"
           background-color="deep-purple lighten-4"
@@ -16,10 +26,10 @@
         ></v-text-field>
 
         <v-text-field
-          v-model="password"
           :counter="50"
           :rules="passwordRules"
           :error-messages="errors.password"
+          v-model="password"
           prepend-icon="mdi-lock"
           type="password"
           label="Password"
@@ -29,10 +39,10 @@
           solo
           clearable
         ></v-text-field>
-        <div class="button wrapper">
+        <v-container class="d-flex justify-space-around">
           <v-btn
-            @click="validate"
             :disabled="!valid"
+            @click="validate"
             class="mr-4"
             type="submit"
             color="success"
@@ -42,15 +52,15 @@
           <v-btn @click="redirectToWelcomePage" color="deep-purple lighten-5">
             back
           </v-btn>
-        </div>
+        </v-container>
       </v-form>
-    </v-sheet>
+    </v-card>
     <v-snackbar
+      :timeout="snackbarTimeout"
+      :color="snackbarColor"
       v-model="snackbar"
       vertical="vertical"
       transition="fab-transition"
-      :timeout="snackbarTimeout"
-      :color="snackbarColor"
       top
       right
       shaped
@@ -72,12 +82,13 @@
         </v-btn>
       </template>
     </v-snackbar>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import router from '@/router';
+import { errorMessage, emailRegExp } from '@/utilities';
 
 export default Vue.extend({
   name: 'LogIn',
@@ -86,26 +97,21 @@ export default Vue.extend({
     snackbar: false,
     snackbarMessage: '',
     snackbarColor: 'info',
-    snackbarTimeout: 3000,
+    snackbarTimeout: 5000,
     email: '',
     password: '',
     errors: { email: '', password: '' },
     emailRules: [
+      (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
+      (email: string) => email?.length <= 50 || errorMessage('longEmail'),
       (email: string) =>
-        email?.length >= 10 || 'E-mail cannot be shorter than 10 characters!',
-      (email: string) =>
-        email?.length <= 50 || 'E-mail cannot be longer than 50 characters!',
-      (email: string) =>
-        /([a-zA-Z]{3,})@[a-zA-Z]{3,}[.][a-zA-Z]{2,}/.test(email) ||
-        'Invalid email address!',
+        emailRegExp.test(email) || errorMessage('invalidEmail'),
     ],
     passwordRules: [
       (password: string) =>
-        password?.length >= 5 ||
-        'Password cannot be shorter than 5 characters!',
+        password?.length >= 5 || errorMessage('shortPassword'),
       (password: string) =>
-        password?.length <= 50 ||
-        'Password cannot be longer than 50 characters!',
+        password?.length <= 50 || errorMessage('longPassword'),
     ],
   }),
   methods: {
@@ -121,8 +127,8 @@ export default Vue.extend({
         body: JSON.stringify(newUser),
       };
 
-      try {
-        const logInFetch = async () => {
+      const logInFetch = async () => {
+        try {
           const response = await fetch(
             'http://localhost:8090/api/users/login',
             dataForLogIn
@@ -130,19 +136,27 @@ export default Vue.extend({
           if (response.ok) {
             this.redirectToWelcomePage();
           }
-          this.snackbarMessage =
-            response.statusText || 'Wrong login or password';
-          this.snackbarColor = 'info';
-          this.snackbar = true;
-        };
 
-        logInFetch();
-      } catch (e) {
-        this.snackbarMessage = e.message || 'Check your network connection';
-        this.snackbarColor = 'red';
-        this.snackbar = true;
-      }
+          this.snackbarStatus(
+            response.statusText || errorMessage('wrongLoginOrPassword'),
+            'info'
+          );
+        } catch (e) {
+          this.snackbarStatus(
+            e.message || errorMessage('checkNetworkConnection'),
+            'red'
+          );
+        }
+      };
+
+      logInFetch();
     },
+    snackbarStatus(message: string, statusMessage: string) {
+      this.snackbarMessage = message;
+      this.snackbarColor = statusMessage;
+      this.snackbar = true;
+    },
+
     redirectToWelcomePage() {
       router.push('/welcome');
     },
@@ -152,29 +166,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.form.wrapper {
-  width: 30%;
-  min-width: 320px;
-
-  .v-sheet {
-    display: flex;
-    flex-shrink: 2;
-    justify-content: center;
-    align-items: center;
-    padding-top: 25px;
-    margin: 25px;
-
-    form {
-      width: 80%;
-      margin: 25px;
-
-      .button.wrapper {
-        display: flex;
-        justify-content: space-evenly;
-      }
-    }
-  }
-}
-</style>

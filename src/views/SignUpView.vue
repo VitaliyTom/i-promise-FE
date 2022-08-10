@@ -1,8 +1,12 @@
 <template>
-  <div class="container">
-    <p class="title_registration">Registration</p>
+  <v-container
+    class="d-flex flex-column justify-center align-center fill-height"
+  >
+    <p class="text-lg-h2 deep-purple--text text--darken-1 mb-10">
+      Registration
+    </p>
     <sign-up></sign-up>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts">
@@ -16,11 +20,3 @@ export default Vue.extend({
   },
 });
 </script>
-
-<style lang="scss">
-.title_registration {
-  font-size: 32px;
-  font-weight: bold;
-  color: #673ab7;
-}
-</style>

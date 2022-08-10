@@ -14,9 +14,3 @@ export default Vue.extend({
   data: () => ({}),
 });
 </script>
-
-<style lang="scss">
-.root {
-  height: 100%;
-}
-</style>
