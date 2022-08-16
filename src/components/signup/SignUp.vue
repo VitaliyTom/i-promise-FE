@@ -105,42 +105,62 @@ import Vue from 'vue';
 import router from '@/router';
 import { errorMessage, emailRegExp } from '@/utilities';
 
+type TValidationRules = (ValidationFieldForm: string) => string;
+type TErrors = { nickName: string; email: string; password: string };
+type VForm = Vue & { validate: () => boolean };
+
+interface IData {
+  valid: boolean;
+  snackbar: boolean;
+  snackbarMessage: string;
+  snackbarColor: string;
+  snackbarTimeout: number;
+  nickName: string;
+  email: string;
+  password: string;
+  errors: TErrors;
+  nickNameRules: TValidationRules[];
+  emailRules: TValidationRules[];
+  passwordRules: TValidationRules[];
+}
+
 export default Vue.extend({
   name: 'SignUp',
 
-  data: () => ({
-    valid: false,
-    snackbar: false,
-    snackbarMessage: '',
-    snackbarColor: 'info',
-    snackbarTimeout: 5000,
-    nickName: '',
-    email: '',
-    password: '',
-    errors: {
+  data: () =>
+    ({
+      valid: false,
+      snackbar: false,
+      snackbarMessage: '',
+      snackbarColor: 'info',
+      snackbarTimeout: 5000,
       nickName: '',
       email: '',
       password: '',
-    },
-    nickNameRules: [
-      (nickName: string) =>
-        nickName?.length >= 3 || errorMessage('shortNickName'),
-      (nickName: string) =>
-        nickName?.length <= 50 || errorMessage('longNickName'),
-    ],
-    emailRules: [
-      (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
-      (email: string) => email?.length <= 50 || errorMessage('longEmail'),
-      (email: string) =>
-        emailRegExp.test(email) || errorMessage('invalidEmail'),
-    ],
-    passwordRules: [
-      (password: string) =>
-        password?.length >= 5 || errorMessage('shortPassword'),
-      (password: string) =>
-        password?.length <= 50 || errorMessage('longPassword'),
-    ],
-  }),
+      errors: {
+        nickName: '',
+        email: '',
+        password: '',
+      },
+      nickNameRules: [
+        (nickName: string) =>
+          nickName?.length >= 3 || errorMessage('shortNickName'),
+        (nickName: string) =>
+          nickName?.length <= 50 || errorMessage('longNickName'),
+      ],
+      emailRules: [
+        (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
+        (email: string) => email?.length <= 50 || errorMessage('longEmail'),
+        (email: string) =>
+          emailRegExp.test(email) || errorMessage('invalidEmail'),
+      ],
+      passwordRules: [
+        (password: string) =>
+          password?.length >= 5 || errorMessage('shortPassword'),
+        (password: string) =>
+          password?.length <= 50 || errorMessage('longPassword'),
+      ],
+    } as IData),
   methods: {
     submit() {
       const newUser = {
@@ -156,9 +176,10 @@ export default Vue.extend({
       };
 
       const registerFetch = async () => {
+        const processEnv = process.env;
         try {
           const response = await fetch(
-            'http://localhost:8090/api/users/registration',
+            `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/registration`,
             dataForRegister
           );
           if (response.ok) {
@@ -172,7 +193,7 @@ export default Vue.extend({
         } catch (e) {
           this.snackbarStatus(
             e.message || errorMessage('checkNetworkConnection'),
-            'red'
+            'error'
           );
         }
       };
@@ -188,7 +209,7 @@ export default Vue.extend({
       router.push('/welcome');
     },
     validate() {
-      this.$refs.form.validate();
+      (this.$refs.form as VForm).validate();
     },
   },
 });
