@@ -71,9 +71,9 @@
     </v-card>
 
     <v-snackbar
-      :timeout="snackbarTimeout"
-      :color="snackbarColor"
-      v-model="snackbar"
+      :timeout="$store.state.dataSnackbar.timeout"
+      :color="$store.state.dataSnackbar.color"
+      v-model="$store.state.dataSnackbar.visible"
       vertical="vertical"
       transition="fab-transition"
       top
@@ -84,11 +84,11 @@
       max-height="150"
       min-height="75"
     >
-      {{ snackbarMessage }}
+      {{ $store.state.dataSnackbar.message }}
 
       <template v-slot:action="{ attrs }">
         <v-btn
-          @click="snackbar = false"
+          @click="$store.state.dataSnackbar.visible = false"
           v-bind="attrs"
           color="brown darken-4"
           text
@@ -111,10 +111,6 @@ type VForm = Vue & { validate: () => boolean };
 
 interface IData {
   valid: boolean;
-  snackbar: boolean;
-  snackbarMessage: string;
-  snackbarColor: string;
-  snackbarTimeout: number;
   nickName: string;
   email: string;
   password: string;
@@ -130,10 +126,6 @@ export default Vue.extend({
   data: () =>
     ({
       valid: false,
-      snackbar: false,
-      snackbarMessage: '',
-      snackbarColor: 'info',
-      snackbarTimeout: 5000,
       nickName: '',
       email: '',
       password: '',
@@ -183,27 +175,36 @@ export default Vue.extend({
             dataForRegister
           );
           if (response.ok) {
-            this.redirectToWelcomePage();
+            const user = await response.json();
+            this.$store.commit('saveUser', user);
+            this.$store.commit('isLogged', true);
+            this.redirectToHomePage();
+            return;
           }
 
-          this.snackbarStatus(
-            response.statusText || errorMessage('userAlreadyExists'),
-            'info'
-          );
+          const snackbar = {
+            visible: true,
+            message: response.statusText || errorMessage('userAlreadyExists'),
+            color: 'info',
+            timeout: 5000,
+          };
+          this.$store.commit('snackbar', snackbar);
         } catch (e) {
-          this.snackbarStatus(
-            e.message || errorMessage('checkNetworkConnection'),
-            'error'
-          );
+          const snackbar = {
+            visible: true,
+            message: e.message || errorMessage('checkNetworkConnection'),
+            color: 'error',
+            timeout: 5000,
+          };
+          this.$store.commit('snackbar', snackbar);
         }
       };
 
       registerFetch();
     },
-    snackbarStatus(message: string, statusMessage: string) {
-      this.snackbarMessage = message;
-      this.snackbarColor = statusMessage;
-      this.snackbar = true;
+
+    redirectToHomePage() {
+      router.push('/home');
     },
     redirectToWelcomePage() {
       router.push('/welcome');

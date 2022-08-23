@@ -1,15 +1,15 @@
 <template>
-  <welcome />
+  <home />
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
-import Welcome from '@/components/Welcome.vue';
+import Home from '@/components/home/Home.vue';
 
 export default Vue.extend({
-  name: 'WelcomeView',
+  name: 'HomeView',
   components: {
-    Welcome,
+    Home,
   },
 });
 </script>
