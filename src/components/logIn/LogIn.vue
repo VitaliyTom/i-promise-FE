@@ -56,9 +56,9 @@
       </v-form>
     </v-card>
     <v-snackbar
-      :timeout="$store.state.dataSnackbar.timeout"
-      :color="$store.state.dataSnackbar.color"
-      v-model="$store.state.dataSnackbar.visible"
+      :timeout="dataSnackbar.timeout"
+      :color="dataSnackbar.color"
+      v-model="dataSnackbar.visible"
       vertical="vertical"
       transition="fab-transition"
       top
@@ -69,14 +69,14 @@
       max-height="150"
       min-height="75"
     >
-      {{ $store.state.dataSnackbar.message }}
+      {{ dataSnackbar.message }}
 
       <template v-slot:action="{ attrs }">
         <v-btn
           color="brown darken-4"
           text
           v-bind="attrs"
-          @click="$store.state.dataSnackbar.visible = false"
+          @click="handleChangeSnackbar"
         >
           Close
         </v-btn>
@@ -89,6 +89,7 @@
 import Vue from 'vue';
 import router from '@/router';
 import { errorMessage, emailRegExp } from '@/utilities';
+import { mapState } from 'vuex';
 
 type TValidationRules = (ValidationFieldForm: string) => string;
 type TErrors = { email: string; password: string };
@@ -140,15 +141,13 @@ export default Vue.extend({
 
       const logInFetch = async () => {
         const processEnv = process.env;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/login`;
         try {
-          const response = await fetch(
-            `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/login`,
-            dataForLogIn
-          );
+          const response = await fetch(URL, dataForLogIn);
           if (response.ok) {
             const user = await response.json();
-            this.$store.commit('saveUser', user);
-            this.$store.commit('isLogged', true);
+            this.$store.commit('SAVE_USER', user);
+            this.$store.commit('IS_LOGGED', true);
             this.redirectToHomePage();
             return;
           }
@@ -160,7 +159,7 @@ export default Vue.extend({
             color: 'info',
             timeout: 5000,
           };
-          this.$store.commit('snackbar', snackbar);
+          this.$store.commit('SNACKBAR', snackbar);
         } catch (e) {
           const snackbar = {
             visible: true,
@@ -168,11 +167,20 @@ export default Vue.extend({
             color: 'error',
             timeout: 5000,
           };
-          this.$store.commit('snackbar', snackbar);
+          this.$store.commit('SNACKBAR', snackbar);
         }
       };
 
       logInFetch();
+    },
+
+    handleChangeSnackbar() {
+      this.$store.commit('SNACKBAR', {
+        visible: false,
+        message: '',
+        color: 'info',
+        timeout: 5000,
+      });
     },
 
     redirectToHomePage() {
@@ -184,6 +192,9 @@ export default Vue.extend({
     validate() {
       (this.$refs.form as VForm).validate();
     },
+  },
+  computed: {
+    ...mapState(['dataSnackbar']),
   },
 });
 </script>

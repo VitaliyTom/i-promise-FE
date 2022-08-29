@@ -1,6 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="this.$props.visible" persistent max-width="600px">
+    <v-dialog v-model="$props.visible" persistent max-width="600px">
       <v-card>
         <v-card-title>
           <span class="text-h5">Create new promise</span>

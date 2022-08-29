@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 
 Vue.use(Vuex);
 
-type TUser = { userId: number; nickName: string; email: string };
+type TUser = { userId: number | null; nickName: string; email: string };
 type TDataSnackbar = {
   visible: boolean;
   message: string;
@@ -26,7 +26,7 @@ const userDefault: TUser = {
 export default new Vuex.Store({
   state: {
     user: {
-      userId: 0,
+      userId: null,
       nickName: '',
       email: '',
     },
@@ -40,17 +40,24 @@ export default new Vuex.Store({
   } as IState,
 
   mutations: {
-    saveUser(state: IState, user: TUser = userDefault) {
+    SAVE_USER(state: IState, user: TUser = userDefault) {
       state.user = user;
     },
-    isLogged(state: IState, bool: boolean) {
+    IS_LOGGED(state: IState, bool: boolean) {
       state.isLogged = bool;
     },
-    snackbar(state: IState, snackbar: TDataSnackbar) {
+    SNACKBAR(state: IState, snackbar: TDataSnackbar) {
       state.dataSnackbar = snackbar;
     },
   },
-  getters: {},
+  getters: {
+    user: (state: IState) => ({
+      userId: state.user.userId,
+      nickName: state.user.nickName,
+      email: state.user.email,
+      nameAbbreviation: state.user.nickName.slice(0, 2).toUpperCase(),
+    }),
+  },
   actions: {},
   modules: {},
 });

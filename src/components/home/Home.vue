@@ -7,7 +7,7 @@
             <v-list-item class="px-2">
               <v-list-item-avatar>
                 <v-avatar color="deep-purple lighten-2" size="40">{{
-                  $store.state.user.nickName.slice(0, 2).toUpperCase()
+                  user.nameAbbreviation
                 }}</v-avatar>
               </v-list-item-avatar>
             </v-list-item>
@@ -17,11 +17,11 @@
                 <v-list-item-title
                   class="text-h6 deep-purple--text text--darken-1"
                 >
-                  {{ $store.state.user.nickName }}
+                  {{ user.nickName }}
                 </v-list-item-title>
                 <v-list-item-subtitle
                   class="deep-purple--text text--darken-1"
-                  >{{ $store.state.user.email }}</v-list-item-subtitle
+                  >{{ user.email }}</v-list-item-subtitle
                 >
               </v-list-item-content>
             </v-list-item>
@@ -63,9 +63,9 @@
 
     <v-card width="100%"> PROMISES </v-card>
     <v-snackbar
-      :timeout="$store.state.dataSnackbar.timeout"
-      :color="$store.state.dataSnackbar.color"
-      v-model="$store.state.dataSnackbar.visible"
+      :timeout="dataSnackbar.timeout"
+      :color="dataSnackbar.color"
+      v-model="dataSnackbar.visible"
       vertical="vertical"
       transition="fab-transition"
       top
@@ -76,11 +76,11 @@
       max-height="150"
       min-height="75"
     >
-      {{ $store.state.dataSnackbar.message }}
+      {{ dataSnackbar.message }}
 
       <template v-slot:action="{ attrs }">
         <v-btn
-          @click="$store.state.dataSnackbar.visible = false"
+          @click="handleChangeSnackbar"
           color="brown darken-4"
           text
           v-bind="attrs"
@@ -91,7 +91,7 @@
     </v-snackbar>
     <add-promise
       @close="handleCloseAddPromise"
-      :visible="visibleAddPromise"
+      :visible="isAddPromiseVisible"
     ></add-promise>
   </v-card>
 </template>
@@ -101,9 +101,10 @@ import Vue from 'vue';
 import router from '@/router';
 import { errorMessage } from '@/utilities';
 import AddPromise from '@/components/promise/AddPromise.vue';
+import { mapGetters, mapState } from 'vuex';
 
 interface IData {
-  visibleAddPromise: boolean;
+  isAddPromiseVisible: boolean;
 }
 
 export default Vue.extend({
@@ -111,7 +112,7 @@ export default Vue.extend({
   components: { AddPromise },
   data: () =>
     ({
-      visibleAddPromise: false,
+      isAddPromiseVisible: false,
     } as IData),
   created() {
     if (!this.$store.state.isLogged) {
@@ -122,13 +123,12 @@ export default Vue.extend({
     signOut() {
       const signOutFetch = async () => {
         const processEnv = process.env;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/logout`;
         try {
-          const response = await fetch(
-            `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/logout`
-          );
+          const response = await fetch(URL);
           if (response.ok) {
-            this.$store.commit('isLogged', false);
-            this.$store.commit('saveUser');
+            this.$store.commit('SAVE_USER');
+            this.$store.commit('IS_LOGGED', false);
             this.redirectToWelcomePage();
           }
         } catch (e) {
@@ -138,24 +138,37 @@ export default Vue.extend({
             color: 'error',
             timeout: 5000,
           };
-          this.$store.commit('snackbar', snackbar);
+          this.$store.commit('SNACKBAR', snackbar);
         }
       };
 
       signOutFetch();
     },
 
+    handleChangeSnackbar() {
+      this.$store.commit('SNACKBAR', {
+        visible: false,
+        message: '',
+        color: 'info',
+        timeout: 5000,
+      });
+    },
+
     handleCloseAddPromise() {
-      this.visibleAddPromise = false;
+      this.isAddPromiseVisible = false;
     },
 
     handleAddPromise() {
-      this.visibleAddPromise = true;
+      this.isAddPromiseVisible = true;
     },
 
     redirectToWelcomePage() {
       router.push('/welcome');
     },
+  },
+  computed: {
+    ...mapGetters(['user']),
+    ...mapState(['dataSnackbar']),
   },
 });
 </script>
