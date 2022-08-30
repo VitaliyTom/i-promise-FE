@@ -1,15 +1,15 @@
 <template>
-  <v-app>
-    <v-main>
-      <router-view />
-    </v-main>
-  </v-app>
+  <home />
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
+import Home from '@/components/home/Home.vue';
 
 export default Vue.extend({
-  name: 'App',
+  name: 'HomeView',
+  components: {
+    Home,
+  },
 });
 </script>

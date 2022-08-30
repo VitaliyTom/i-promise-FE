@@ -56,9 +56,9 @@
       </v-form>
     </v-card>
     <v-snackbar
-      :timeout="snackbarTimeout"
-      :color="snackbarColor"
-      v-model="snackbar"
+      :timeout="dataSnackbar.timeout"
+      :color="dataSnackbar.color"
+      v-model="dataSnackbar.visible"
       vertical="vertical"
       transition="fab-transition"
       top
@@ -69,14 +69,14 @@
       max-height="150"
       min-height="75"
     >
-      {{ snackbarMessage }}
+      {{ dataSnackbar.message }}
 
       <template v-slot:action="{ attrs }">
         <v-btn
           color="brown darken-4"
           text
           v-bind="attrs"
-          @click="snackbar = false"
+          @click="handleChangeSnackbar"
         >
           Close
         </v-btn>
@@ -89,31 +89,43 @@
 import Vue from 'vue';
 import router from '@/router';
 import { errorMessage, emailRegExp } from '@/utilities';
+import { mapState } from 'vuex';
+
+type TValidationRules = (ValidationFieldForm: string) => string;
+type TErrors = { email: string; password: string };
+type VForm = Vue & { validate: () => boolean };
+
+interface IData {
+  valid: boolean;
+  email: string;
+  password: string;
+  errors: TErrors;
+  emailRules: TValidationRules[];
+  passwordRules: TValidationRules[];
+}
 
 export default Vue.extend({
   name: 'LogIn',
-  data: () => ({
-    valid: false,
-    snackbar: false,
-    snackbarMessage: '',
-    snackbarColor: 'info',
-    snackbarTimeout: 5000,
-    email: '',
-    password: '',
-    errors: { email: '', password: '' },
-    emailRules: [
-      (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
-      (email: string) => email?.length <= 50 || errorMessage('longEmail'),
-      (email: string) =>
-        emailRegExp.test(email) || errorMessage('invalidEmail'),
-    ],
-    passwordRules: [
-      (password: string) =>
-        password?.length >= 5 || errorMessage('shortPassword'),
-      (password: string) =>
-        password?.length <= 50 || errorMessage('longPassword'),
-    ],
-  }),
+  data: () =>
+    ({
+      valid: false,
+      email: '',
+      password: '',
+      errors: { email: '', password: '' },
+      emailRules: [
+        (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
+        (email: string) => email?.length <= 50 || errorMessage('longEmail'),
+        (email: string) =>
+          emailRegExp.test(email) || errorMessage('invalidEmail'),
+      ],
+      passwordRules: [
+        (password: string) =>
+          password?.length >= 5 || errorMessage('shortPassword'),
+        (password: string) =>
+          password?.length <= 50 || errorMessage('longPassword'),
+      ],
+    } as IData),
+
   methods: {
     submit() {
       const newUser = {
@@ -128,41 +140,61 @@ export default Vue.extend({
       };
 
       const logInFetch = async () => {
+        const processEnv = process.env;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/login`;
         try {
-          const response = await fetch(
-            'http://localhost:8090/api/users/login',
-            dataForLogIn
-          );
+          const response = await fetch(URL, dataForLogIn);
           if (response.ok) {
-            this.redirectToWelcomePage();
+            const user = await response.json();
+            this.$store.commit('SAVE_USER', user);
+            this.$store.commit('IS_LOGGED', true);
+            this.redirectToHomePage();
+            return;
           }
 
-          this.snackbarStatus(
-            response.statusText || errorMessage('wrongLoginOrPassword'),
-            'info'
-          );
+          const snackbar = {
+            visible: true,
+            message:
+              response.statusText || errorMessage('wrongLoginOrPassword'),
+            color: 'info',
+            timeout: 5000,
+          };
+          this.$store.commit('SNACKBAR', snackbar);
         } catch (e) {
-          this.snackbarStatus(
-            e.message || errorMessage('checkNetworkConnection'),
-            'red'
-          );
+          const snackbar = {
+            visible: true,
+            message: e.message || errorMessage('checkNetworkConnection'),
+            color: 'error',
+            timeout: 5000,
+          };
+          this.$store.commit('SNACKBAR', snackbar);
         }
       };
 
       logInFetch();
     },
-    snackbarStatus(message: string, statusMessage: string) {
-      this.snackbarMessage = message;
-      this.snackbarColor = statusMessage;
-      this.snackbar = true;
+
+    handleChangeSnackbar() {
+      this.$store.commit('SNACKBAR', {
+        visible: false,
+        message: '',
+        color: 'info',
+        timeout: 5000,
+      });
     },
 
+    redirectToHomePage() {
+      router.push('/home');
+    },
     redirectToWelcomePage() {
       router.push('/welcome');
     },
     validate() {
-      this.$refs.form.validate();
+      (this.$refs.form as VForm).validate();
     },
+  },
+  computed: {
+    ...mapState(['dataSnackbar']),
   },
 });
 </script>

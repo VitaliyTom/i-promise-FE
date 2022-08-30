@@ -71,9 +71,9 @@
     </v-card>
 
     <v-snackbar
-      :timeout="snackbarTimeout"
-      :color="snackbarColor"
-      v-model="snackbar"
+      :timeout="dataSnackbar.timeout"
+      :color="dataSnackbar.color"
+      v-model="dataSnackbar.visible"
       vertical="vertical"
       transition="fab-transition"
       top
@@ -84,11 +84,11 @@
       max-height="150"
       min-height="75"
     >
-      {{ snackbarMessage }}
+      {{ dataSnackbar.message }}
 
       <template v-slot:action="{ attrs }">
         <v-btn
-          @click="snackbar = false"
+          @click="handleChangeSnackbar"
           v-bind="attrs"
           color="brown darken-4"
           text
@@ -104,43 +104,56 @@
 import Vue from 'vue';
 import router from '@/router';
 import { errorMessage, emailRegExp } from '@/utilities';
+import { mapState } from 'vuex';
+
+type TValidationRules = (ValidationFieldForm: string) => string;
+type TErrors = { nickName: string; email: string; password: string };
+type VForm = Vue & { validate: () => boolean };
+
+interface IData {
+  valid: boolean;
+  nickName: string;
+  email: string;
+  password: string;
+  errors: TErrors;
+  nickNameRules: TValidationRules[];
+  emailRules: TValidationRules[];
+  passwordRules: TValidationRules[];
+}
 
 export default Vue.extend({
   name: 'SignUp',
 
-  data: () => ({
-    valid: false,
-    snackbar: false,
-    snackbarMessage: '',
-    snackbarColor: 'info',
-    snackbarTimeout: 5000,
-    nickName: '',
-    email: '',
-    password: '',
-    errors: {
+  data: () =>
+    ({
+      valid: false,
       nickName: '',
       email: '',
       password: '',
-    },
-    nickNameRules: [
-      (nickName: string) =>
-        nickName?.length >= 3 || errorMessage('shortNickName'),
-      (nickName: string) =>
-        nickName?.length <= 50 || errorMessage('longNickName'),
-    ],
-    emailRules: [
-      (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
-      (email: string) => email?.length <= 50 || errorMessage('longEmail'),
-      (email: string) =>
-        emailRegExp.test(email) || errorMessage('invalidEmail'),
-    ],
-    passwordRules: [
-      (password: string) =>
-        password?.length >= 5 || errorMessage('shortPassword'),
-      (password: string) =>
-        password?.length <= 50 || errorMessage('longPassword'),
-    ],
-  }),
+      errors: {
+        nickName: '',
+        email: '',
+        password: '',
+      },
+      nickNameRules: [
+        (nickName: string) =>
+          nickName?.length >= 3 || errorMessage('shortNickName'),
+        (nickName: string) =>
+          nickName?.length <= 50 || errorMessage('longNickName'),
+      ],
+      emailRules: [
+        (email: string) => email?.length >= 10 || errorMessage('shortEmail'),
+        (email: string) => email?.length <= 50 || errorMessage('longEmail'),
+        (email: string) =>
+          emailRegExp.test(email) || errorMessage('invalidEmail'),
+      ],
+      passwordRules: [
+        (password: string) =>
+          password?.length >= 5 || errorMessage('shortPassword'),
+        (password: string) =>
+          password?.length <= 50 || errorMessage('longPassword'),
+      ],
+    } as IData),
   methods: {
     submit() {
       const newUser = {
@@ -156,40 +169,60 @@ export default Vue.extend({
       };
 
       const registerFetch = async () => {
+        const processEnv = process.env;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/users/registration`;
         try {
-          const response = await fetch(
-            'http://localhost:8090/api/users/registration',
-            dataForRegister
-          );
+          const response = await fetch(URL, dataForRegister);
           if (response.ok) {
-            this.redirectToWelcomePage();
+            const user = await response.json();
+            this.$store.commit('SAVE_USER', user);
+            this.$store.commit('IS_LOGGED', true);
+            this.redirectToHomePage();
+            return;
           }
 
-          this.snackbarStatus(
-            response.statusText || errorMessage('userAlreadyExists'),
-            'info'
-          );
+          const snackbar = {
+            visible: true,
+            message: response.statusText || errorMessage('userAlreadyExists'),
+            color: 'info',
+            timeout: 5000,
+          };
+          this.$store.commit('SNACKBAR', snackbar);
         } catch (e) {
-          this.snackbarStatus(
-            e.message || errorMessage('checkNetworkConnection'),
-            'red'
-          );
+          const snackbar = {
+            visible: true,
+            message: e.message || errorMessage('checkNetworkConnection'),
+            color: 'error',
+            timeout: 5000,
+          };
+          this.$store.commit('SNACKBAR', snackbar);
         }
       };
 
       registerFetch();
     },
-    snackbarStatus(message: string, statusMessage: string) {
-      this.snackbarMessage = message;
-      this.snackbarColor = statusMessage;
-      this.snackbar = true;
+
+    handleChangeSnackbar() {
+      this.$store.commit('SNACKBAR', {
+        visible: false,
+        message: '',
+        color: 'info',
+        timeout: 5000,
+      });
+    },
+
+    redirectToHomePage() {
+      router.push('/home');
     },
     redirectToWelcomePage() {
       router.push('/welcome');
     },
     validate() {
-      this.$refs.form.validate();
+      (this.$refs.form as VForm).validate();
     },
+  },
+  computed: {
+    ...mapState(['dataSnackbar']),
   },
 });
 </script>
