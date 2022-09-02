@@ -2,16 +2,9 @@
   <v-card class="d-flex" min-height="100%">
     <v-card class="d-flex">
       <v-card>
-        <v-navigation-drawer permanent expand-on-hover>
+        <v-navigation-drawer permanent>
           <v-list>
-            <v-list-item class="px-2">
-              <v-list-item-avatar>
-                <v-avatar color="deep-purple lighten-2" size="40">{{
-                  user.nameAbbreviation
-                }}</v-avatar>
-              </v-list-item-avatar>
-            </v-list-item>
-
+            <menu-account :user="user" />
             <v-list-item link>
               <v-list-item-content>
                 <v-list-item-title
@@ -61,7 +54,21 @@
       </v-card>
     </v-card>
 
-    <v-card width="100%"> PROMISES </v-card>
+    <v-card class="d-flex flex-column justify-center align-center" width="100%">
+      <p class="text-lg-h2 deep-purple--text text--darken-1 mb-10">PROMISES</p>
+
+      <v-card
+        v-for="promise in promises"
+        :key="promise.promiseId"
+        class="ma-4"
+        width="70%"
+        elevation="7"
+        outlined
+      >
+        <promise :promise="promise" />
+      </v-card>
+    </v-card>
+
     <v-snackbar
       :timeout="dataSnackbar.timeout"
       :color="dataSnackbar.color"
@@ -81,7 +88,7 @@
       <template v-slot:action="{ attrs }">
         <v-btn
           @click="handleChangeSnackbar"
-          color="brown darken-4"
+          color="deep-purple lighten-2"
           text
           v-bind="attrs"
         >
@@ -102,6 +109,8 @@ import router from '@/router';
 import { errorMessage } from '@/utilities';
 import AddPromise from '@/components/promise/AddPromise.vue';
 import { mapGetters, mapState } from 'vuex';
+import MenuAccount from '@/components/menuAccaunt/menuAccaunt.vue';
+import Promise from '@/components/promise/Promise';
 
 interface IData {
   isAddPromiseVisible: boolean;
@@ -109,7 +118,7 @@ interface IData {
 
 export default Vue.extend({
   name: 'Home-page',
-  components: { AddPromise },
+  components: { MenuAccount, AddPromise, Promise },
   data: () =>
     ({
       isAddPromiseVisible: false,
@@ -118,6 +127,7 @@ export default Vue.extend({
     if (!this.$store.state.isLogged) {
       this.redirectToWelcomePage();
     }
+    this.getAllPromises();
   },
   methods: {
     signOut() {
@@ -145,6 +155,31 @@ export default Vue.extend({
       signOutFetch();
     },
 
+    getAllPromises() {
+      const getPromises = async () => {
+        const processEnv = process.env;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/promise?user-id=${this.user.userId}`;
+        try {
+          const response = await fetch(URL);
+          const promiseList = await response.json();
+          if (response.ok) {
+            this.$store.commit('SAVE_PROMISES', promiseList);
+            return;
+          }
+        } catch (e) {
+          const snackbar = {
+            visible: true,
+            message: e.message || errorMessage('checkNetworkConnection'),
+            color: 'error',
+            timeout: 5000,
+          };
+          this.$store.commit('SNACKBAR', snackbar);
+        }
+      };
+
+      getPromises();
+    },
+
     handleChangeSnackbar() {
       this.$store.commit('SNACKBAR', {
         visible: false,
@@ -168,6 +203,7 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters(['user']),
+    ...mapGetters(['promises']),
     ...mapState(['dataSnackbar']),
   },
 });

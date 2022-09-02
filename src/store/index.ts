@@ -10,15 +10,30 @@ type TDataSnackbar = {
   color: string;
   timeout: number;
 };
+type TReason = {
+  reasonId: number;
+  promiseId: number;
+  reason: string;
+};
+type TPromise = {
+  promiseId: number;
+  userId: number;
+  addictionId: number;
+  amountDays: number;
+  startDateStamp: number;
+  nameAddiction: string;
+  reason: TReason[];
+};
 
 interface IState {
   user: TUser;
   dataSnackbar: TDataSnackbar;
+  promises: TPromise[];
   isLogged: boolean;
 }
 
 const userDefault: TUser = {
-  userId: 0,
+  userId: null,
   nickName: '',
   email: '',
 };
@@ -36,6 +51,7 @@ export default new Vuex.Store({
       color: 'info',
       timeout: 5000,
     },
+    promises: [],
     isLogged: false,
   } as IState,
 
@@ -49,6 +65,9 @@ export default new Vuex.Store({
     SNACKBAR(state: IState, snackbar: TDataSnackbar) {
       state.dataSnackbar = snackbar;
     },
+    SAVE_PROMISES(state: IState, promises: TPromise[]) {
+      state.promises = promises;
+    },
   },
   getters: {
     user: (state: IState) => ({
@@ -57,6 +76,7 @@ export default new Vuex.Store({
       email: state.user.email,
       nameAbbreviation: state.user.nickName.slice(0, 2).toUpperCase(),
     }),
+    promises: (state: IState) => state.promises,
   },
   actions: {},
   modules: {},

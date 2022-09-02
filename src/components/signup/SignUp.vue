@@ -54,6 +54,10 @@
         ></v-text-field>
 
         <v-container class="d-flex justify-space-around">
+          <v-btn @click="redirectToWelcomePage" color="deep-purple lighten-5">
+            back
+          </v-btn>
+
           <v-btn
             :disabled="!valid"
             @click="validate"
@@ -62,9 +66,6 @@
             color="success"
           >
             submit
-          </v-btn>
-          <v-btn @click="redirectToWelcomePage" color="deep-purple lighten-5">
-            back
           </v-btn>
         </v-container>
       </v-form>
