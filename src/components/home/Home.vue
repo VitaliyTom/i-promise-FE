@@ -65,7 +65,7 @@
         elevation="7"
         outlined
       >
-        <promise :promise="promise" />
+        <promise-component :promise="promise" :user="user" />
       </v-card>
     </v-card>
 
@@ -110,7 +110,7 @@ import { errorMessage } from '@/utilities';
 import AddPromise from '@/components/promise/AddPromise.vue';
 import { mapGetters, mapState } from 'vuex';
 import MenuAccount from '@/components/menuAccaunt/menuAccaunt.vue';
-import Promise from '@/components/promise/Promise';
+import PromiseComponent from '@/components/promise/Promise.vue';
 
 interface IData {
   isAddPromiseVisible: boolean;
@@ -118,7 +118,7 @@ interface IData {
 
 export default Vue.extend({
   name: 'Home-page',
-  components: { MenuAccount, AddPromise, Promise },
+  components: { PromiseComponent, MenuAccount, AddPromise },
   data: () =>
     ({
       isAddPromiseVisible: false,
@@ -158,7 +158,7 @@ export default Vue.extend({
     getAllPromises() {
       const getPromises = async () => {
         const processEnv = process.env;
-        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/promise?user-id=${this.user.userId}`;
+        const URL = `${processEnv.VUE_APP_SERVER_API_URL}${processEnv.VUE_APP_PORT}${processEnv.VUE_APP_API_PATH}/promise?userId=${this.user.userId}`;
         try {
           const response = await fetch(URL);
           const promiseList = await response.json();

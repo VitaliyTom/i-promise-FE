@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <v-row justify="left px-3">
+    <v-row class="px-3">
       <v-menu bottom min-width="200px" rounded offset-y>
         <template v-slot:activator="{ on }">
           <v-btn icon x-large v-on="on">
