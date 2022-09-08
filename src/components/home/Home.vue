@@ -57,6 +57,27 @@
     <v-card class="d-flex flex-column justify-center align-center" width="100%">
       <p class="text-lg-h2 deep-purple--text text--darken-1 mb-10">PROMISES</p>
 
+      <v-tooltip v-if="!promises.length" bottom color="success">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            @click="handleAddPromise"
+            elevation="24"
+            fab
+            icon
+            large
+            rounded
+            text
+            color="success"
+            dark
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-icon large>mdi-plus-circle-outline</v-icon>
+          </v-btn>
+        </template>
+        <span>Add new promise</span>
+      </v-tooltip>
+
       <v-card
         v-for="promise in promises"
         :key="promise.promiseId"

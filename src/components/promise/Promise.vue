@@ -10,10 +10,19 @@
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
         </v-sheet>
-        <v-sheet class="pa-2" color="deep-purple lighten-2">
-          <v-btn color="red pa-2" fab small dark>
-            <v-icon @click="handleDeletePromise">mdi-delete-circle</v-icon>
-          </v-btn>
+        <v-sheet
+          @click="handleDeletePromise"
+          class="pa-2"
+          color="deep-purple lighten-2"
+        >
+          <v-tooltip bottom color="error">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn color="red pa-2" fab small dark v-bind="attrs" v-on="on">
+                <v-icon>mdi-delete-circle</v-icon>
+              </v-btn>
+            </template>
+            <span>Delete promise</span>
+          </v-tooltip>
         </v-sheet>
       </v-sheet>
     </v-card-title>
