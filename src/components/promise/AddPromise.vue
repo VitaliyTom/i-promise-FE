@@ -63,11 +63,15 @@
               ></v-slider>
               <v-col class="pa-0" cols="12" sm="3">
                 <v-text-field
+                  v-model="amountDays"
                   :value="amountDays"
+                  :rules="amountDaysRules"
+                  type="number"
+                  max="365"
+                  min="1"
                   filled
                   rounded
                   dense
-                  disabled
                 ></v-text-field>
               </v-col>
             </v-col>
@@ -112,7 +116,9 @@ import Vue from 'vue';
 import { errorMessage } from '@/utilities';
 import { getUnixTime, format } from 'date-fns';
 
-type TValidationRules = (ValidationFieldForm: string) => string;
+type TValidationRules = (
+  ValidationFieldForm: string | number
+) => string | number;
 type VForm = Vue & { validate: () => boolean };
 type TAddiction = { addiction: string; addictionId: number } | null;
 
@@ -147,6 +153,10 @@ export default Vue.extend({
       reasonRules: [
         (reason: string) => reason.length > 5 || 'Min 5 characters',
         (reason: string) => reason.length <= 50 || 'Max 50 characters',
+      ],
+      amountDaysRules: [
+        (amountDays: number) => amountDays >= 1 || 'Min 1 day',
+        (amountDays: number) => amountDays <= 365 || 'Max 365 days',
       ],
       addictionRules: [
         (addiction: string) => !!addiction || 'This field is required',
